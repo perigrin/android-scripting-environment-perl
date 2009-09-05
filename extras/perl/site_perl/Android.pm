@@ -23,7 +23,7 @@ use vars qw($VERSION $PORT $AUTOLOAD);
 $VERSION = 0.001;
 
 use IO::Socket;
-use JSON;
+use JSON ();
 
 BEGIN {
     $PORT = $ENV{AP_PORT} or die "$0: AP_PORT undefined\n";
@@ -43,7 +43,7 @@ sub new {
     bless {
         conn  => $fh,
         id    => 0,
-        _json => JSON->new->allow_nonref,
+        json => JSON->new->allow_nonref,
     }, $class;
 }
 
@@ -81,7 +81,7 @@ sub close {
 sub do_rpc {
     my $self    = shift;
     my $method  = pop;
-    my $request = $self->{_json}->encode(
+    my $request = $self->{json}->encode(
         {
             id     => $self->{id},
             method => $method,
@@ -95,9 +95,9 @@ sub do_rpc {
         my $response = readline( $self->{conn} );
         if ( $self->trace ) { print STDERR "<< $response" }
         if ( defined $response && length $response ) {
-            my $result = $self->{_json}->decode($response);
+            my $result = $self->{json}->decode($response);
             if ( defined $result && exists $result->{error} ) {
-                print STDERR "$0: error: ", $self->{_json}->encode( $result->{error} ), "\n";
+                print STDERR "$0: error: ", $self->{json}->encode( $result->{error} ), "\n";
             }
             return $result;
         }
